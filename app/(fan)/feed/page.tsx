@@ -1,45 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { getFeedPosts, type Post } from "@/lib/db";
 
-type VideoPost = {
-  id: number;
-  creatorName: string;
-  videoUrl: string;
-  caption: string;
-  price: number;
-};
-
-const MOCK_POSTS: VideoPost[] = [
-  {
-    id: 1,
-    creatorName: "Luna Art",
-    videoUrl: "/placeholder-video-1.mp4",
-    caption: "Sketching a fantasy landscape 🌄",
-    price: 4.99,
-  },
-  {
-    id: 2,
-    creatorName: "Neo Beats",
-    videoUrl: "/placeholder-video-2.mp4",
-    caption: "New lofi track — late night session 🎧",
-    price: 2.99,
-  },
-  {
-    id: 3,
-    creatorName: "Pixel Chef",
-    videoUrl: "/placeholder-video-3.mp4",
-    caption: "5-minute ramen hack 🍜",
-    price: 1.99,
-  },
-  {
-    id: 4,
-    creatorName: "Stella Vlogs",
-    videoUrl: "/placeholder-video-4.mp4",
-    caption: "Morning routine in Tokyo ✨",
-    price: 3.49,
-  },
-];
+type VideoPost = Post;
 
 function PostCard({ post }: { post: VideoPost }) {
   return (
@@ -68,7 +33,15 @@ function PostCard({ post }: { post: VideoPost }) {
 }
 
 export default function FeedPage() {
-  const [posts] = useState(MOCK_POSTS);
+  const { user } = useAuth();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getFeedPosts(user?.uid ?? null)
+      .then(setPosts)
+      .finally(() => setLoading(false));
+  }, [user]);
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col gap-6 bg-zinc-50 px-4 py-8 dark:bg-black">
@@ -76,11 +49,19 @@ export default function FeedPage() {
         Feed
       </h1>
 
-      <div className="flex flex-col gap-6">
-        {posts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </div>
+      {loading ? (
+        <p className="py-12 text-center text-sm text-zinc-400">Loading posts…</p>
+      ) : posts.length === 0 ? (
+        <p className="py-12 text-center text-sm text-zinc-400 dark:text-zinc-500">
+          No posts yet. Follow some creators!
+        </p>
+      ) : (
+        <div className="flex flex-col gap-6">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

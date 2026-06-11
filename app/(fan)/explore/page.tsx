@@ -1,22 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getCreatorAccounts, type CreatorProfile } from "@/lib/db";
 
-type Creator = {
-  id: number;
-  username: string;
-  subscriberCount: number;
-  bio: string;
-};
-
-const MOCK_CREATORS: Creator[] = [
-  { id: 1, username: "Luna Art", subscriberCount: 12400, bio: "Sketching fantasy landscapes 🌄" },
-  { id: 2, username: "Neo Beats", subscriberCount: 8700, bio: "Lofi & chill beats 🎧" },
-  { id: 3, username: "Pixel Chef", subscriberCount: 15300, bio: "5-minute recipes 🍜" },
-  { id: 4, username: "Stella Vlogs", subscriberCount: 22100, bio: "Tokyo morning diaries ✨" },
-  { id: 5, username: "Cyber Coder", subscriberCount: 9800, bio: "Code & coffee ☕" },
-  { id: 6, username: "Mochi Draws", subscriberCount: 3100, bio: "Cute doodles every day 🐱" },
-];
+type Creator = CreatorProfile;
 
 function formatCount(n: number): string {
   if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "K";
@@ -36,7 +23,7 @@ function CreatorCard({
     <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
       {/* Avatar placeholder */}
       <div className="flex aspect-square items-center justify-center bg-zinc-100 text-4xl dark:bg-zinc-800">
-        {creator.username.charAt(0)}
+        {creator.username?.charAt(0) ?? "?"}
       </div>
 
       <div className="space-y-2 p-4">
@@ -47,7 +34,7 @@ function CreatorCard({
           {creator.bio}
         </p>
         <p className="text-xs text-zinc-400 dark:text-zinc-500">
-          {formatCount(creator.subscriberCount)} subscribers
+          {formatCount(creator.subscriberCount ?? 0)} subscribers
         </p>
         <button
           onClick={onSubscribe}
@@ -65,18 +52,26 @@ function CreatorCard({
 }
 
 export default function ExplorePage() {
+  const [creators, setCreators] = useState<Creator[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [subscribedIds, setSubscribedIds] = useState<Set<number>>(new Set());
+  const [subscribedUids, setSubscribedUids] = useState<Set<string>>(new Set());
 
-  const filtered = MOCK_CREATORS.filter((c) =>
-    c.username.toLowerCase().includes(query.toLowerCase()),
+  useEffect(() => {
+    getCreatorAccounts()
+      .then(setCreators)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = creators.filter((c) =>
+    c.username?.toLowerCase().includes(query.toLowerCase()),
   );
 
-  const toggleSubscribe = (id: number) => {
-    setSubscribedIds((prev) => {
+  const toggleSubscribe = (uid: string) => {
+    setSubscribedUids((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(uid)) next.delete(uid);
+      else next.add(uid);
       return next;
     });
   };
@@ -96,19 +91,20 @@ export default function ExplorePage() {
         className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:placeholder-zinc-500 dark:focus:border-purple-400"
       />
 
-      {/* Creator grid */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <p className="py-12 text-center text-sm text-zinc-400">Loading creators…</p>
+      ) : filtered.length === 0 ? (
         <p className="py-12 text-center text-sm text-zinc-400 dark:text-zinc-500">
-          No creators found.
+          {query ? "No creators match your search." : "No creators yet."}
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((creator) => (
             <CreatorCard
-              key={creator.id}
+              key={creator.uid}
               creator={creator}
-              subscribed={subscribedIds.has(creator.id)}
-              onSubscribe={() => toggleSubscribe(creator.id)}
+              subscribed={subscribedUids.has(creator.uid)}
+              onSubscribe={() => toggleSubscribe(creator.uid)}
             />
           ))}
         </div>
