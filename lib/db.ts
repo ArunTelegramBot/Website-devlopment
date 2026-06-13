@@ -9,6 +9,9 @@ import {
   orderBy,
   limit,
   getDocs,
+  arrayUnion,
+  arrayRemove,
+  increment,
   type DocumentData,
 } from 'firebase/firestore';
 
@@ -69,6 +72,8 @@ export type Post = {
   price: number;
   visibility: 'public' | 'subscribers' | 'private';
   createdAt: number;
+  likedBy?: string[];
+  likeCount?: number;
 } & DocumentData;
 
 /**
@@ -113,6 +118,29 @@ export async function getFeedPosts(
   }
   merged.sort((a, b) => b.createdAt - a.createdAt);
   return merged.slice(0, limitCount);
+}
+
+/**
+ * Toggle a like on a post.
+ * Adds/removes the user UID from `likedBy` and increments/decrements `likeCount`.
+ */
+export async function toggleLike(
+  postId: string,
+  userId: string,
+  currentlyLiked: boolean,
+): Promise<void> {
+  const ref = doc(db, 'posts', postId);
+  if (currentlyLiked) {
+    await updateDoc(ref, {
+      likedBy: arrayRemove(userId),
+      likeCount: increment(-1),
+    });
+  } else {
+    await updateDoc(ref, {
+      likedBy: arrayUnion(userId),
+      likeCount: increment(1),
+    });
+  }
 }
 
 /* ─── Explore / creators ─────────────────────────────────────── */
