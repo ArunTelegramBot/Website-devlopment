@@ -9,6 +9,8 @@ import {
   orderBy,
   limit,
   getDocs,
+  addDoc,
+  serverTimestamp,
   arrayUnion,
   arrayRemove,
   increment,
@@ -165,4 +167,38 @@ export async function getCreatorAccounts(): Promise<CreatorProfile[]> {
   return snap.docs.map(
     (d) => ({ uid: d.id, ...d.data() }) as CreatorProfile,
   );
+}
+
+/* ─── Comments ──────────────────────────────────────────────── */
+
+export type Comment = {
+  id: string;
+  authorId: string;
+  authorName: string;
+  text: string;
+  createdAt: number;
+} & DocumentData;
+
+export async function getComments(postId: string): Promise<Comment[]> {
+  const ref = collection(db, 'posts', postId, 'comments');
+  const q = query(ref, orderBy('createdAt', 'asc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(
+    (d) => ({ id: d.id, ...d.data() }) as Comment,
+  );
+}
+
+export async function addComment(
+  postId: string,
+  authorId: string,
+  authorName: string,
+  text: string,
+): Promise<void> {
+  const ref = collection(db, 'posts', postId, 'comments');
+  await addDoc(ref, {
+    authorId,
+    authorName,
+    text,
+    createdAt: serverTimestamp(),
+  });
 }

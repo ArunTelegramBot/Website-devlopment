@@ -19,7 +19,7 @@ export default function FeedPage() {
   }, [user]);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col gap-6 bg-zinc-50 px-4 py-8 dark:bg-black">
+    <div className="mx-auto flex min-h-screen max-w-lg flex-col gap-6 overflow-x-hidden break-words bg-zinc-50 px-4 py-8 dark:bg-black">
       <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
         Feed
       </h1>

@@ -27,10 +27,10 @@ function CreatorCard({
       </div>
 
       <div className="space-y-2 p-4">
-        <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+        <h3 className="break-words text-sm font-semibold text-zinc-800 dark:text-zinc-200">
           {creator.username}
         </h3>
-        <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+        <p className="break-words text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
           {creator.bio}
         </p>
         <p className="text-xs text-zinc-400 dark:text-zinc-500">
@@ -77,7 +77,7 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-4xl flex-col gap-6 bg-zinc-50 px-4 py-8 dark:bg-black">
+    <div className="mx-auto flex min-h-screen max-w-4xl flex-col gap-6 overflow-x-hidden break-words bg-zinc-50 px-4 py-8 dark:bg-black">
       <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
         Explore
       </h1>
@@ -98,7 +98,7 @@ export default function ExplorePage() {
           {query ? "No creators match your search." : "No creators yet."}
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid min-w-0 grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((creator) => (
             <CreatorCard
               key={creator.uid}
