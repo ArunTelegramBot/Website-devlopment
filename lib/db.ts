@@ -2,6 +2,7 @@ import { db } from '@/lib/firebase';
 import {
   doc,
   getDoc,
+  setDoc,
   updateDoc,
   collection,
   query,
@@ -201,4 +202,36 @@ export async function addComment(
     text,
     createdAt: serverTimestamp(),
   });
+}
+
+/* ─── Creator Settings ──────────────────────────────────────── */
+
+export type CreatorSettings = {
+  fanPrice: number;
+  superFanPrice: number;
+  bio: string;
+} & DocumentData;
+
+/**
+ * Fetch a creator's settings document from the 'creators' collection.
+ */
+export async function getCreatorSettings(
+  uid: string,
+): Promise<CreatorSettings | null> {
+  const ref = doc(db, 'creators', uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  return { uid: snap.id, ...snap.data() } as unknown as CreatorSettings;
+}
+
+/**
+ * Save (upsert) creator settings to the 'creators' collection.
+ * Uses merge: only supplied fields are written.
+ */
+export async function updateCreatorSettings(
+  uid: string,
+  data: { fanPrice: number; superFanPrice: number; bio: string },
+): Promise<void> {
+  const ref = doc(db, 'creators', uid);
+  await setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
 }
